@@ -3,7 +3,11 @@ import { Request, Response } from "express"
 import firebase from "firebase"
 
 import config from "../util/config"
-import { validateSignupData, validateLoginData } from "../util/validators"
+import {
+	validateSignupData,
+	validateLoginData,
+	reduceUserDetails,
+} from "../util/validators"
 
 firebase.initializeApp(config)
 
@@ -78,6 +82,18 @@ export const login = async (req: Request, res: Response) => {
 		} else {
 			return res.status(500).json({ error: err.code })
 		}
+	}
+}
+
+export const addUserDetails = async (req: Request, res: Response) => {
+	let userDetails = reduceUserDetails(req.body)
+
+	try {
+		await db.doc(`/users/${req.user?.handle}`).update(userDetails)
+		return res.json({ message: "Details added successfully" })
+	} catch (err) {
+		console.error(err)
+		return res.status(500).json({ error: err.code })
 	}
 }
 
