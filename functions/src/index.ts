@@ -1,7 +1,8 @@
 import * as functions from "firebase-functions"
 import * as admin from "firebase-admin"
-import express from "express"
 import firebase from "firebase"
+import { Express, Request, Response, NextFunction } from "express"
+const express = require("express")
 
 import config from "../config"
 
@@ -26,7 +27,7 @@ firebase.initializeApp(firebaseConfig)
 
 const db = admin.firestore()
 
-const app = express()
+const app: Express = express()
 
 app.get("/posts", async (_req, res) => {
 	const allPosts = await db
@@ -45,20 +46,66 @@ app.get("/posts", async (_req, res) => {
 	return res.json(posts)
 })
 
-app.post("/post", async (req, res) => {
+interface UserAuthRequest extends Request {
+	user?: {
+		uid?: string
+		handle?: string
+	}
+}
+
+const FBAuth = async (
+	req: UserAuthRequest,
+	res: Response,
+	next: NextFunction
+) => {
+	let idToken
+
+	if (
+		req.headers.authorization &&
+		req.headers.authorization.startsWith("Bearer ")
+	) {
+		idToken = req.headers.authorization.split("Bearer ")[1]
+	} else {
+		console.error("No token found")
+		return res.status(403).json({ error: "Unauthorized" })
+	}
+
+	try {
+		const decodedToken = await admin.auth().verifyIdToken(idToken)
+		req.user = decodedToken
+		console.log(decodedToken)
+		const user = await db
+			.collection("users")
+			.where("userId", "==", req.user.uid)
+			.limit(1)
+			.get()
+		req.user.handle = user.docs[0].data().handle
+		next()
+		return
+	} catch (err) {
+		console.error("Error while verifying token", err)
+		return res.status(403).json(err)
+	}
+}
+
+app.post("/post", FBAuth, async (req: UserAuthRequest, res) => {
+	if (req.body.body.trim() === "") {
+		return res.status(400).json({ body: "Body must not be empty" })
+	}
 	const newPost = {
-		...req.body,
+		body: req.body.body,
+		userHandle: req.user?.handle,
 		createdAt: new Date().toISOString(),
 	}
 
 	try {
 		const post = await db.collection("posts").add(newPost)
-		res.json({
-			message: `Document ${post.id} created successfully!`,
+		return res.json({
+			message: `Document ${post.id} created successfully`,
 		})
 	} catch (err) {
-		res.status(500).json({ error: "something went wrong" })
 		console.error(err)
+		return res.status(500).json({ error: "something went wrong" })
 	}
 })
 
