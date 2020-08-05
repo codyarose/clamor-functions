@@ -3,7 +3,7 @@ import firebase from "firebase"
 import express, { Express } from "express"
 
 import { getAllPosts, createPost } from "../handlers/posts"
-import { signup, login } from "../handlers/users"
+import { signup, login, uploadImage } from "../handlers/users"
 import { FBAuth } from "../util/fbAuth"
 
 if (process.env.NODE_ENV === "development") {
@@ -19,5 +19,6 @@ app.post("/post", FBAuth, createPost)
 // User routes
 app.post("/signup", signup)
 app.post("/login", login)
+app.post("/user/image", FBAuth, uploadImage)
 
 exports.api = functions.https.onRequest(app)

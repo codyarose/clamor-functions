@@ -21,7 +21,6 @@ export const FBAuth = async (
 	try {
 		const decodedToken = await admin.auth().verifyIdToken(idToken)
 		req.user = decodedToken
-		console.log(decodedToken)
 		const user = await db
 			.collection("users")
 			.where("userId", "==", req.user.uid)
