@@ -38,3 +38,26 @@ export const createPost = async (req: Request, res: Response) => {
 		return res.status(500).json({ error: "something went wrong" })
 	}
 }
+
+export const getPost = async (req: Request, res: Response) => {
+	try {
+		const postDoc = await db.doc(`/posts/${req.params.postId}`).get()
+
+		if (!postDoc.exists)
+			return res.status(400).json({ error: "Post not found" })
+
+		const postData = postDoc.data() || {}
+		postData.postId = postDoc.id
+		const comments = await db
+			.collection("comments")
+			.orderBy("createdAt", "desc")
+			.where("postId", "==", req.params.postId)
+			.get()
+		postData.comments = []
+		comments.forEach((comment) => postData.comments.push(comment.data()))
+		return res.json(postData)
+	} catch (err) {
+		console.error(err)
+		return res.status(500).json({ error: err.code })
+	}
+}

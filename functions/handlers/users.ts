@@ -97,6 +97,31 @@ export const addUserDetails = async (req: Request, res: Response) => {
 	}
 }
 
+export const getAuthenticatedUser = async (req: Request, res: Response) => {
+	const userData: {
+		credentials?: unknown
+		likes?: any[]
+	} = {}
+
+	try {
+		const userDoc = await db.doc(`/users/${req.user?.handle}`).get()
+
+		userData.credentials = userDoc.data()
+
+		const userLikes = await db
+			.collection("likes")
+			.where("userHandle", "==", req.user?.handle)
+			.get()
+
+		userData.likes = []
+		userLikes.forEach((doc) => userData.likes?.push(doc.data()))
+		return res.json(userData)
+	} catch (err) {
+		console.error(err)
+		return res.status(500).json({ error: err.code })
+	}
+}
+
 export const uploadImage = async (req: Request, res: Response) => {
 	const BusBoy = require("busboy")
 	const path = require("path")
