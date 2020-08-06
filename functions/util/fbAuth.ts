@@ -27,6 +27,7 @@ export const FBAuth = async (
 			.limit(1)
 			.get()
 		req.user.handle = user.docs[0].data().handle
+		req.user.imageUrl = user.docs[0].data().imageUrl
 		next()
 		return
 	} catch (err) {
