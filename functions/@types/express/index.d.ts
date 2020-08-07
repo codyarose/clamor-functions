@@ -7,6 +7,7 @@ declare global {
 			user?: {
 				uid?: string
 				handle?: string
+				imageUrl?: string
 			}
 		}
 	}
