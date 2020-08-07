@@ -2,7 +2,14 @@ import * as functions from "firebase-functions"
 import firebase from "firebase"
 import express, { Express } from "express"
 
-import { getAllPosts, createPost, getPost } from "../handlers/posts"
+import {
+	getAllPosts,
+	createPost,
+	getPost,
+	commentOnPost,
+	likePost,
+	unlikePost,
+} from "../handlers/posts"
 import {
 	signup,
 	login,
@@ -22,10 +29,10 @@ const app: Express = express()
 app.get("/posts", getAllPosts)
 app.post("/post", FBAuth, createPost)
 app.get("/post/:postId", getPost)
+app.post("/post/:postId/comment", FBAuth, commentOnPost)
+app.get("/post/:postId/like", FBAuth, likePost)
+app.get("/post/:postId/unlike", FBAuth, unlikePost)
 // deletePost
-// likePost
-// unlikePost
-// commentPost
 
 // User routes
 app.post("/signup", signup)
