@@ -9,6 +9,7 @@ import {
 	commentOnPost,
 	likePost,
 	unlikePost,
+	deletePost,
 } from "../handlers/posts"
 import {
 	signup,
@@ -32,7 +33,7 @@ app.get("/post/:postId", getPost)
 app.post("/post/:postId/comment", FBAuth, commentOnPost)
 app.get("/post/:postId/like", FBAuth, likePost)
 app.get("/post/:postId/unlike", FBAuth, unlikePost)
-// deletePost
+app.delete("/post/:postId", FBAuth, deletePost)
 
 // User routes
 app.post("/signup", signup)

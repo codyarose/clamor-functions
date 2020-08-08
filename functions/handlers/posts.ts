@@ -95,7 +95,7 @@ export const commentOnPost = async (req: Request, res: Response) => {
 
 export const likePost = async (req: Request, res: Response) => {
 	try {
-		const postDoc = db.doc(`/posts/${req.params.postId}`)
+		const postRef = db.doc(`/posts/${req.params.postId}`)
 		const likeDoc = await db
 			.collection("likes")
 			.where("userHandle", "==", req.user?.handle)
@@ -103,9 +103,9 @@ export const likePost = async (req: Request, res: Response) => {
 			.limit(1)
 			.get()
 
-		const postDocGet = await postDoc.get()
-		const postData = postDocGet.data() || {}
-		postData.postId = postDoc.id
+		const postDoc = await postRef.get()
+		const postData = postDoc.data() || {}
+		postData.postId = postRef.id
 
 		if (likeDoc.empty) {
 			await db.collection("likes").add({
@@ -113,7 +113,7 @@ export const likePost = async (req: Request, res: Response) => {
 				userHandle: req.user?.handle,
 			})
 			postData.likeCount++
-			postDoc.update({ likeCount: postData.likeCount })
+			postRef.update({ likeCount: postData.likeCount })
 			return res.json(postData)
 		} else {
 			return res.status(400).json({ error: "Post already liked" })
@@ -126,7 +126,7 @@ export const likePost = async (req: Request, res: Response) => {
 
 export const unlikePost = async (req: Request, res: Response) => {
 	try {
-		const postDoc = db.doc(`/posts/${req.params.postId}`)
+		const postRef = db.doc(`/posts/${req.params.postId}`)
 		const likeDoc = await db
 			.collection("likes")
 			.where("userHandle", "==", req.user?.handle)
@@ -134,17 +134,39 @@ export const unlikePost = async (req: Request, res: Response) => {
 			.limit(1)
 			.get()
 
-		const postDocGet = await postDoc.get()
-		const postData = postDocGet.data() || {}
-		postData.postId = postDoc.id
+		const postDoc = await postRef.get()
+		const postData = postDoc.data() || {}
+		postData.postId = postRef.id
 
 		if (likeDoc.empty) {
 			return res.status(400).json({ error: "Post not liked" })
 		} else {
 			await db.doc(`/likes/${likeDoc.docs[0].id}`).delete()
 			postData.likeCount--
-			postDoc.update({ likeCount: postData.likeCount })
+			postRef.update({ likeCount: postData.likeCount })
 			return res.json(postData)
+		}
+	} catch (err) {
+		console.error(err)
+		return res.status(500).json({ error: err.code })
+	}
+}
+
+export const deletePost = async (req: Request, res: Response) => {
+	const postRef = db.doc(`/posts/${req.params.postId}`)
+
+	try {
+		const postDoc = await postRef.get()
+
+		if (!postDoc.exists) {
+			return res.status(404).json({ error: "Post not found" })
+		}
+
+		if (postDoc.data()?.userHandle !== req.user?.handle) {
+			return res.status(403).json({ error: "User unauthorized" })
+		} else {
+			await postRef.delete()
+			return res.json({ success: "Post deleted" })
 		}
 	} catch (err) {
 		console.error(err)
