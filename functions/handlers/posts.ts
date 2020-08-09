@@ -1,5 +1,6 @@
-import { db } from "../util/admin"
 import { Request, Response } from "express"
+
+import { db } from "../util/admin"
 
 export const getAllPosts = async (_req: Request, res: Response) => {
 	const allPosts = await db
@@ -113,7 +114,7 @@ export const likePost = async (req: Request, res: Response) => {
 				userHandle: req.user?.handle,
 			})
 			postData.likeCount++
-			postRef.update({ likeCount: postData.likeCount })
+			await postRef.update({ likeCount: postData.likeCount })
 			return res.json(postData)
 		} else {
 			return res.status(400).json({ error: "Post already liked" })
@@ -143,7 +144,7 @@ export const unlikePost = async (req: Request, res: Response) => {
 		} else {
 			await db.doc(`/likes/${likeDoc.docs[0].id}`).delete()
 			postData.likeCount--
-			postRef.update({ likeCount: postData.likeCount })
+			await postRef.update({ likeCount: postData.likeCount })
 			return res.json(postData)
 		}
 	} catch (err) {
