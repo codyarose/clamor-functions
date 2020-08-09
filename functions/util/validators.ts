@@ -60,7 +60,7 @@ interface UserDetails {
 }
 
 export const reduceUserDetails = (data: UserDetails) => {
-	let userDetails = {
+	const userDetails = {
 		bio: "",
 		website: "",
 		location: "",
