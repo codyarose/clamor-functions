@@ -58,8 +58,11 @@ exports.createNotificationOnLike = functions
 			const postDoc = await db
 				.doc(`/posts/${snapshot.data().postId}`)
 				.get()
-			if (postDoc.exists) {
-				return db.doc(`/notifications/${snapshot.id}`).set({
+			if (
+				postDoc.exists &&
+				postDoc.data()?.userHandle !== snapshot.data().userHandle
+			) {
+				await db.doc(`/notifications/${snapshot.id}`).set({
 					createdAt: new Date().toISOString(),
 					recipient: postDoc.data()?.userHandle,
 					sender: snapshot.data().userHandle,
@@ -68,10 +71,8 @@ exports.createNotificationOnLike = functions
 					postId: postDoc.id,
 				})
 			}
-			return
 		} catch (err) {
 			console.error(err)
-			return
 		}
 	})
 
@@ -81,7 +82,7 @@ exports.deleteNotificationOnUnlike = functions
 	.onDelete(async (snapshot) => {
 		console.log(snapshot)
 		try {
-			return await db.doc(`/notifications/${snapshot.id}`).delete()
+			await db.doc(`/notifications/${snapshot.id}`).delete()
 		} catch (err) {
 			console.error(err)
 			return
@@ -96,8 +97,11 @@ exports.createNotificationOnComment = functions
 			const postDoc = await db
 				.doc(`/posts/${snapshot.data().postId}`)
 				.get()
-			if (postDoc.exists) {
-				return await db.doc(`/notifications/${snapshot.id}`).set({
+			if (
+				postDoc.exists &&
+				postDoc.data()?.userHandle !== snapshot.data().userHandle
+			) {
+				await db.doc(`/notifications/${snapshot.id}`).set({
 					createdAt: new Date().toISOString(),
 					recipient: postDoc.data()?.userHandle,
 					sender: snapshot.data().userHandle,
@@ -106,9 +110,70 @@ exports.createNotificationOnComment = functions
 					postId: postDoc.id,
 				})
 			}
-			return
 		} catch (err) {
 			console.error(err)
 			return
+		}
+	})
+
+exports.onUserImageChange = functions
+	.region("us-central1")
+	.firestore.document("users/{userId}")
+	.onUpdate(async (change) => {
+		try {
+			if (
+				change.before.data().imageUrl !== change.after.data().imageUrl
+			) {
+				const batch = db.batch()
+				const postDoc = await db
+					.collection("posts")
+					.where("userHandle", "==", change.before.data().handle)
+					.get()
+				postDoc.forEach((doc) => {
+					const post = db.doc(`/posts/${doc.id}`)
+					batch.update(post, {
+						userImage: change.after.data().imageUrl,
+					})
+				})
+				await batch.commit()
+			} else return true
+		} catch (err) {
+			console.error(err)
+			return
+		}
+	})
+
+exports.onPostDelete = functions
+	.region("us-central1")
+	.firestore.document("posts/{postId}")
+	.onDelete(async (_snapshot, context) => {
+		try {
+			const postId = context.params.postId
+			const batch = db.batch()
+			const commentDoc = await db
+				.collection("comments")
+				.where("postId", "==", postId)
+				.get()
+			commentDoc.forEach((doc) =>
+				batch.delete(db.doc(`/comments/${doc.id}`))
+			)
+
+			const likeDoc = await db
+				.collection("likes")
+				.where("postId", "==", postId)
+				.get()
+			likeDoc.forEach((doc) => batch.delete(db.doc(`/likes/${doc.id}`)))
+
+			const notificationsDoc = await db
+				.collection("notifications")
+				.where("postId", "==", postId)
+				.get()
+			notificationsDoc.forEach((doc) =>
+				batch.delete(db.doc(`/notifications/${doc.id}`))
+			)
+
+			await batch.commit()
+		} catch (err) {
+			console.error(err)
 		}
 	})
