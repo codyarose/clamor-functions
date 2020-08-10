@@ -1,16 +1,29 @@
 {
 	"compilerOptions": {
-		"module": "commonjs",
-		"noImplicitReturns": true,
-		"noUnusedLocals": true,
-		"outDir": "lib",
-		"sourceMap": true,
-		"strict": true,
 		"target": "es2017",
+		"lib": ["DOM", "DOM.Iterable", "ESNext"],
+		"allowJs": true,
+		"skipLibCheck": true,
 		"esModuleInterop": true,
+		"allowSyntheticDefaultImports": true,
+		"strict": true,
+		"forceConsistentCasingInFileNames": true,
+		"module": "ESNext",
+		"moduleResolution": "Node",
 		"resolveJsonModule": true,
+		"noEmit": true,
+		"jsx": "react",
+		"sourceMap": true,
+		"declaration": true,
+		"noUnusedLocals": true,
+		"noUnusedParameters": true,
+		"experimentalDecorators": true,
+		"noFallthroughCasesInSwitch": true,
+		"noImplicitReturns": true,
+		"outDir": "lib",
 		"typeRoots": ["@types", "./node_modules/@types"]
 	},
 	"compileOnSave": true,
-	"include": ["src"]
+	"include": ["src"],
+	"exclude": ["node_modules", "lib"]
 }

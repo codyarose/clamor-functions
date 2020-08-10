@@ -2,7 +2,10 @@ import { Request, Response } from "express"
 
 import { db } from "../util/admin"
 
-export const getAllPosts = async (_req: Request, res: Response) => {
+export const getAllPosts = async (
+	_req: Request,
+	res: Response
+): Promise<unknown> => {
 	const allPosts = await db
 		.collection("posts")
 		.orderBy("createdAt", "desc")
@@ -22,7 +25,10 @@ export const getAllPosts = async (_req: Request, res: Response) => {
 	return res.json(posts)
 }
 
-export const createPost = async (req: Request, res: Response) => {
+export const createPost = async (
+	req: Request,
+	res: Response
+): Promise<unknown> => {
 	if (req.body.body.trim() === "")
 		return res.status(400).json({ body: "Body must not be empty" })
 
@@ -49,7 +55,10 @@ export const createPost = async (req: Request, res: Response) => {
 	}
 }
 
-export const getPost = async (req: Request, res: Response) => {
+export const getPost = async (
+	req: Request,
+	res: Response
+): Promise<unknown> => {
 	try {
 		const postDoc = await db.doc(`/posts/${req.params.postId}`).get()
 
@@ -72,7 +81,10 @@ export const getPost = async (req: Request, res: Response) => {
 	}
 }
 
-export const commentOnPost = async (req: Request, res: Response) => {
+export const commentOnPost = async (
+	req: Request,
+	res: Response
+): Promise<unknown> => {
 	if (req.body.body.trim() === "")
 		return res.status(400).json({ comment: "Must not be empty" })
 
@@ -97,7 +109,10 @@ export const commentOnPost = async (req: Request, res: Response) => {
 	}
 }
 
-export const likePost = async (req: Request, res: Response) => {
+export const likePost = async (
+	req: Request,
+	res: Response
+): Promise<unknown> => {
 	try {
 		const postRef = db.doc(`/posts/${req.params.postId}`)
 		const likeDoc = await db
@@ -128,7 +143,10 @@ export const likePost = async (req: Request, res: Response) => {
 	}
 }
 
-export const unlikePost = async (req: Request, res: Response) => {
+export const unlikePost = async (
+	req: Request,
+	res: Response
+): Promise<unknown> => {
 	try {
 		const postRef = db.doc(`/posts/${req.params.postId}`)
 		const likeDoc = await db
@@ -156,7 +174,10 @@ export const unlikePost = async (req: Request, res: Response) => {
 	}
 }
 
-export const deletePost = async (req: Request, res: Response) => {
+export const deletePost = async (
+	req: Request,
+	res: Response
+): Promise<unknown> => {
 	const postRef = db.doc(`/posts/${req.params.postId}`)
 
 	try {
