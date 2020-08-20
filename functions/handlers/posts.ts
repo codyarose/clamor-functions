@@ -46,9 +46,7 @@ export const createPost = async (
 		const post = await db.collection("posts").add(newPost)
 		const resPost = newPost
 		resPost.postId = post.id
-		return res.json({
-			message: `Document ${post.id} created successfully`,
-		})
+		return res.json(resPost)
 	} catch (err) {
 		console.error(err)
 		return res.status(500).json({ error: "something went wrong" })
