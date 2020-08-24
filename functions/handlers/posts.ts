@@ -6,23 +6,27 @@ export const getAllPosts = async (
 	_req: Request,
 	res: Response
 ): Promise<unknown> => {
-	const allPosts = await db
-		.collection("posts")
-		.orderBy("createdAt", "desc")
-		.get()
-	const posts: FirebaseFirestore.DocumentData[] = []
-	for (const doc of allPosts.docs) {
-		posts.push({
-			postId: doc.id,
-			body: doc.data().body,
-			userHandle: doc.data().userHandle,
-			createdAt: doc.data().createdAt,
-			commentCount: doc.data().commentCount,
-			likeCount: doc.data().likeCount,
-			userImage: doc.data().userImage,
-		})
+	try {
+		const allPosts = await db
+			.collection("posts")
+			.orderBy("createdAt", "desc")
+			.get()
+		const posts: FirebaseFirestore.DocumentData[] = []
+		for (const doc of allPosts.docs) {
+			posts.push({
+				postId: doc.id,
+				body: doc.data().body,
+				userHandle: doc.data().userHandle,
+				createdAt: doc.data().createdAt,
+				commentCount: doc.data().commentCount,
+				likeCount: doc.data().likeCount,
+				userImage: doc.data().userImage,
+			})
+		}
+		return res.json(posts)
+	} catch (error) {
+		return res.status(500).json({ general: "Something went wrong" })
 	}
-	return res.json(posts)
 }
 
 export const createPost = async (
@@ -61,7 +65,7 @@ export const getPost = async (
 		const postDoc = await db.doc(`/posts/${req.params.postId}`).get()
 
 		if (!postDoc.exists)
-			return res.status(400).json({ error: "Post not found" })
+			return res.status(400).json({ general: "Post not found" })
 
 		const postData = postDoc.data() || {}
 		postData.postId = postDoc.id
@@ -133,7 +137,7 @@ export const likePost = async (
 			await postRef.update({ likeCount: postData.likeCount })
 			return res.json(postData)
 		} else {
-			return res.status(400).json({ error: "Post already liked" })
+			return res.status(400).json({ general: "Post already liked" })
 		}
 	} catch (err) {
 		console.error(err)
@@ -159,7 +163,7 @@ export const unlikePost = async (
 		postData.postId = postRef.id
 
 		if (likeDoc.empty) {
-			return res.status(400).json({ error: "Post not liked" })
+			return res.status(400).json({ general: "Post not liked" })
 		} else {
 			await db.doc(`/likes/${likeDoc.docs[0].id}`).delete()
 			postData.likeCount--
@@ -182,11 +186,11 @@ export const deletePost = async (
 		const postDoc = await postRef.get()
 
 		if (!postDoc.exists) {
-			return res.status(404).json({ error: "Post not found" })
+			return res.status(404).json({ general: "Post not found" })
 		}
 
 		if (postDoc.data()?.userHandle !== req.user?.handle) {
-			return res.status(403).json({ error: "User unauthorized" })
+			return res.status(403).json({ general: "User unauthorized" })
 		} else {
 			await postRef.delete()
 			return res.json({ success: "Post deleted" })

@@ -217,7 +217,7 @@ export const uploadImage = async (
 			if (mimetype !== "image/jpeg" && mimetype !== "image/png") {
 				return res
 					.status(400)
-					.json({ error: "Wrong file type submitted" })
+					.json({ uploadImage: "Wrong file type submitted" })
 			}
 			const imageExtension = filename.split(".")[
 				filename.split(".").length - 1
